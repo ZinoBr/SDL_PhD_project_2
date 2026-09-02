@@ -1,5 +1,5 @@
 ---
-title: "Report: Analysis of Head start data"
+title: "Report: Analysis of NSCLYA data"
 format: pdf
 editor: visual
 ---
@@ -62,13 +62,13 @@ For evaluating predictive performance, 10-fold cross-validation was used. Becaus
 |                  | \             | \                    | \             |
 |                  |               | Linear               | Random Forest |
 +==================+===============+======================+===============+
-| Child            | 0.59          | 0.33                 | 0.28          |
+| Child            | 0.15          | 0.09                 | 0.08          |
 +------------------+---------------+----------------------+---------------+
-| Mother           | 0.59          | 0.51                 | 0.13          |
+| Mother           | 0.24          | 0.21                 | 0.05          |
 +------------------+---------------+----------------------+---------------+
-| Family           | 0.35          | 0.35                 | 0.56          |
+| Family           | 0.10          | 0.10                 | 0.12          |
 +------------------+---------------+----------------------+---------------+
-| Pre- & Postnatal | 0.43          | 0.34                 | **0**         |
+| Pre- & Postnatal | 0.13          | 0.10                 | 0             |
 +------------------+---------------+----------------------+---------------+
 
 ### Plots of coefficient distributions
@@ -239,9 +239,9 @@ make_group_cv_folds <- function(data, group_var, k = 10, seed = 123) {
 }
 
 # Load data
-subset_HS_cc <- readRDS('/Users/zinobrystowski/Documents/PhD Project/Projects 2 and 3/Developmental dataset/Deming data/HS_data_cc.rds')
+subset_NSCLYA_cc <- readRDS('NSCLYA_data_cc.rds')
 
-names(subset_HS_cc)
+names(subset_NSCLYA_cc)
 
 # MVS application to NHANES data ----
 
@@ -249,10 +249,10 @@ names(subset_HS_cc)
 set.seed(42)
 
 # Create a vector with CV folds
-fold_inx <- make_group_cv_folds(subset_HS_cc, "MotherID")
+fold_inx <- make_group_cv_folds(subset_NSCLYA_cc, "MotherID")
 
 # Exclude child- and mother ID
-deming_data_wthout_IDs <- subset_HS_cc[,!names(subset_HS_cc) %in% c("MotherID", "ChildID")]
+deming_data_wthout_IDs <- subset_NSCLYA_cc[,!names(subset_NSCLYA_cc) %in% c("MotherID", "ChildID")]
 
 # Define view indices based on source, taking into account dummies for factors
 view_ids <- c(
