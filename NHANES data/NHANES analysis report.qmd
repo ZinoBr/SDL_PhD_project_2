@@ -73,17 +73,139 @@ The analysis compares three different MVS configurations. Two configurations use
 | Body measurements | 0            | 0                    | 0             |
 +-------------------+--------------+----------------------+---------------+
 
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+# MVS application to NHANES data ----
+
+# Libraries
+library(glmnet)
+library(randomForest)
+library(mvs)
+
+
+# Helper function to extract results
+extract_results <- function(model, y_train = y_train, newx = X_test, newy = y_test) {
+  pred <- predict(model, newx = newx)
+  test_mse <- mean((pred - newy)^2)
+  test_r2 <- 1 - test_mse / var(newy)
+  coefs <- coef(model)$`Level 2`[[1]]
+  cv_variances <- apply(model$`Level 1`$CVs, 2, var)
+  cv_sds <- sqrt(cv_variances)
+  std_coefs <- coefs[-1,] * (cv_sds / sd(y_train))
+  
+  list(
+    model = model,
+    coefficients = coefs,
+    std_coefficients = std_coefs,
+    test_MSE = test_mse,
+    test_R2 = test_r2,
+    cv_variances = cv_variances
+  )
+  
+}
+
+# Load data
+new_nhanes_complc <- readRDS('nhanes_cc.rds')
+
+# Set seed
+set.seed(42)
+
+
+
+# Define view indices based on source and number of dummy variables
+
+view_ids <- c(rep(1, 29), # Sociodemographics
+              rep(2, 84), # Dietary behavior
+              rep(3, 23), # Medical condition
+              rep(4, 6), # Sleep
+              rep(5, 6), # Physical activity
+              rep(6, 8) # Body measures
+              )
+
+# Crate an index vector for CV folds
+fold_inx <- mvs:::kFolds(1:nrow(new_nhanes_complc), 10)
+
+# Create list objects to collect extracted results
+res_mvs_default <- list()
+res_mvs_rf <- list()
+res_mvs_repeated <- list()
+res_mvs_resid <- list()
+
+for(i in 1:10) {
+  
+  # Split into training and test data
+  X_train <- model.matrix( ~ . - 1, new_nhanes_complc[fold_inx != i , -c(1, 146)])
+  y_train <- new_nhanes_complc[fold_inx != i, 146]
+  X_test <- model.matrix( ~ . - 1, new_nhanes_complc[fold_inx == i , -c(1, 146)])
+  y_test <- new_nhanes_complc[fold_inx == i, 146]
+  
+  # Fit MVS models ----
+  
+  # Fit MVS default
+  mvs_default <- MVS(
+    x = X_train,
+    y = y_train,
+    views = view_ids,
+    progress = FALSE,
+    family = "gaussian",
+    std.meta = TRUE,
+    std.base = FALSE
+  )
+  
+  # Compute results
+  res_mvs_default[[i]] <- extract_results(mvs_default, y_train = y_train, newx = X_test, newy = y_test)
+  
+
+  
+  # Repeated views MVS
+  
+  # Create a new predictor matrix Xrep with repeated views
+  Xrep_train <- cbind(X_train, X_train)
+  Xrep_test <- cbind(X_test, X_test)
+  view_ids_rep <- c(view_ids, (view_ids + 6))
+  
+  # MVS residual models
+  
+  # Specify type of base learner per view
+  type <- list(
+    level1 = c(
+      "StaPLR",
+      "StaPLR",
+      "StaPLR",
+      "StaPLR",
+      "StaPLR",
+      "StaPLR",
+      "RF",
+      "RF",
+      "RF",
+      "RF",
+      "RF",
+      "RF"
+    ),
+    meta = "StaPLR"
+  )
+  
+  # Fit model with offset
+  mvs_res_mod <- MVS(
+    x = Xrep_train,
+    y = y_train,
+    views = view_ids_rep,
+    type = type,
+    progress = FALSE,
+    family = "gaussian",
+    offsets = list(c(1, 7), c(2, 8), c(3, 9), c(4, 10), c(5, 11), c(6, 12)),
+    std.meta = TRUE
+  )
+  
+  # Compute results
+  res_mvs_resid[[i]] <- extract_results(mvs_res_mod, y_train = y_train, newx = Xrep_test, newy = y_test)
+  
+}
+
+```
+
 ### Plots of coefficient distributions
 
 ```{r, echo=FALSE}
-
-# Load results
-res_mvs_default <- readRDS('Initial results/res_mvs_default.rds')
-
-# res_mvs_rf <- readRDS('Initial results/res_mvs_rf.rds')
-
-res_mvs_resid <- readRDS('Initial results/res_mvs_resid.rds')
-
 
 # Helper function to summarize results
 summarize_results <- function(res_list) {
@@ -148,15 +270,12 @@ plot_coefficients <- function(res_list, title, view.names = NULL) {
 ```
 
 ```{r, echo = F}
-#summarize_results(res_mvs_default)
+# Plot coefficients
+
 plot_coefficients(res_mvs_default, title = "MVS Linear: Distribution of MVS coefficients by view", view.names = c("Sociodemographics", "Dietary Behavior", "Medical cond.", "Physical actvitiy","Sleep", "Body measur."))
-```
 
-#### 
-
-```{r, echo = F}
-# summarize_results(res_mvs_resid)
 plot_coefficients(res_mvs_resid, title = "MVS Residual Models: Distribution of MVS coefficients by view", view.names = c("Sociodemogr. (LM)", "Dietary Beh. (LM)", "Medical cond. (LM)", "Physical act. (LM)","Sleep (LM)", "Body measur. (LM)", "Sociodemogr. (RF)", "Dietary Beh. (RF)", "Medical cond. (RF)", "Physical act. (RF)","Sleep (RF)", "Body measur. (RF)"))
+
 ```
 
 # 
@@ -210,12 +329,8 @@ new_nhanes_complc <- readRDS('nhanes_cc.rds')
 # Set seed
 set.seed(42)
 
-# Load helper function to compute results from MVS objects
-#source('Helper functions/extract_results.R')
-
 
 # Define view indices based on source and number of dummy variables
-# colnames(model.matrix( ~ . - 1, new_nhanes_complc[, -c(1, 146)])) # minus ID and outcome
 
 view_ids <- c(rep(1, 29), # Sociodemographics
               rep(2, 84), # Dietary behavior
