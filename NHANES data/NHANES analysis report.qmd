@@ -62,13 +62,13 @@ The analysis compares three different MVS configurations. Two configurations use
 +===================+================+======================+================+
 | Sociodemographics | 0              | 0                    | 0              |
 +-------------------+----------------+----------------------+----------------+
-| Dietary behavior  | 0              | 0                    | 0.03           |
+| Dietary behavior  | 0              | 0                    | 0.01           |
 +-------------------+----------------+----------------------+----------------+
-| Medical condition | 0.48           | 0.42                 | 0              |
+| Medical condition | 0.13           | 0.11                 | 0              |
 +-------------------+----------------+----------------------+----------------+
 | Physical activity | 0              | 0                    | 0              |
 +-------------------+----------------+----------------------+----------------+
-| Sleep             | 0.94           | 0.93                 | 0              |
+| Sleep             | 0.41           | 0.41                 | 0              |
 +-------------------+----------------+----------------------+----------------+
 | Body measurements | 0              | 0                    | 0              |
 +-------------------+----------------+----------------------+----------------+
@@ -136,14 +136,32 @@ library(glmnet)
 library(randomForest)
 library(mvs)
 
+# Helper function to extract results
+extract_results <- function(model, y_train = y_train, newx = X_test, newy = y_test) {
+  pred <- predict(model, newx = newx)
+  test_mse <- mean((pred - newy)^2)
+  test_r2 <- 1 - test_mse / var(newy)
+  coefs <- coef(model)$`Level 2`[[1]]
+  cv_variances <- apply(model$`Level 1`$CVs, 2, var)
+  cv_sds <- sqrt(cv_variances)
+  std_coefs <- coefs[-1,] * (cv_sds / sd(y_train))
+  
+  list(
+    model = model,
+    coefficients = coefs,
+    std_coefficients = std_coefs,
+    test_MSE = test_mse,
+    test_R2 = test_r2,
+    cv_variances = cv_variances
+  )
+  
+}
+
 # Load data
 new_nhanes_complc <- readRDS('/Users/zinobrystowski/Documents/PhD Project/Projects 2 and 3/NHANES data/nhanes_cc.rds')
 
 # Set seed
 set.seed(42)
-
-# Load helper function to compute results from MVS objects
-source('/Users/zinobrystowski/Documents/PhD Project/Projects 2 and 3/NHANES data/Helper functions/extract_results.R')
 
 
 # Define view indices based on source and number of dummy variables
@@ -290,16 +308,19 @@ for(i in 1:10) {
 ```{r, eval=FALSE}
 
 # Helper function to extract results
-extract_results <- function(model, newx = X_test, newy = y_test) {
+extract_results <- function(model, y_train = y_train, newx = X_test, newy = y_test) {
   pred <- predict(model, newx = newx)
   test_mse <- mean((pred - newy)^2)
   test_r2 <- 1 - test_mse / var(newy)
   coefs <- coef(model)$`Level 2`[[1]]
   cv_variances <- apply(model$`Level 1`$CVs, 2, var)
+  cv_sds <- sqrt(cv_variances)
+  std_coefs <- coefs[-1,] * (cv_sds / sd(y_train))
   
   list(
     model = model,
     coefficients = coefs,
+    std_coefficients = std_coefs,
     test_MSE = test_mse,
     test_R2 = test_r2,
     cv_variances = cv_variances
@@ -312,7 +333,7 @@ summarize_results <- function(res_list) {
   mse <- sapply(res_list, `[[`, "test_MSE")
   r2  <- sapply(res_list, `[[`, "test_R2")
   
-  coefs <- do.call(cbind, lapply(res_list, `[[`, "coefficients"))
+  coefs <- do.call(cbind, lapply(res_list, `[[`, "std_coefficients"))
   
   list(
     MSE_mean = mean(mse, na.rm = TRUE),
@@ -333,7 +354,7 @@ library(reshape2)
 library(ggplot2)
 
 plot_coefficients <- function(res_list, title) {
-  coefs <- do.call(cbind, lapply(res_list, `[[`, "coefficients"))
+  coefs <- do.call(cbind, lapply(res_list, `[[`, "std_coefficients"))
   
   coef_mat <- as.matrix(coefs)[-1, ]
   colnames(coef_mat) <- c(
