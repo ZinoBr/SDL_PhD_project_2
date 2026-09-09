@@ -62,25 +62,81 @@ The analysis compares three different MVS configurations. Two configurations use
 +===================+===============+======================+===============+
 | Sociodemographics | 0             | 0                    | 0             |
 +-------------------+---------------+----------------------+---------------+
-| Dietary behavior  | 0             | 0                    | 0.03          |
+| Dietary behavior  | 0             | 0                    | 0             |
 +-------------------+---------------+----------------------+---------------+
-| Medical condition | 0.48          | 0.42                 | 0             |
+| Medical condition | 0.13          | 0.14                 | 0             |
 +-------------------+---------------+----------------------+---------------+
 | Physical activity | 0             | 0                    | 0             |
 +-------------------+---------------+----------------------+---------------+
-| Sleep             | 0.94          | 0.93                 | 0             |
+| Sleep             | 0.42          | 0.42                 | 0             |
 +-------------------+---------------+----------------------+---------------+
 | Body measurements | 0             | 0                    | 0             |
 +-------------------+---------------+----------------------+---------------+
 
+## Using lambda.1se setting
+
+**Table 1**
+
+*Predictive performance*
+
+|          | MVS Linear  | MVS Residual Models |
+|----------|-------------|---------------------|
+| MSE (SD) | 13.7 (0.01) | 13.7 (0.02)         |
+| Test R²  | 0.10        | 0.11                |
+
+*Note.* The variance of the outcome in the complete data is 15.2. Predictive R² was calulcated as 1 - mse / var(y_test). The reported values are calculated as means.
+
+**Table 2**
+
+*Medians of standardized coefficients*
+
++-------------------+---------------+----------------------+---------------+
+|                   | MVS Linear    | MVS Residual Models\ | \             |
+|                   |               | \                    | \             |
+|                   |               | Linear               | Random Forest |
++===================+===============+======================+===============+
+| Sociodemographics | 0             | 0                    | 0             |
++-------------------+---------------+----------------------+---------------+
+| Dietary behavior  | 0             | 0                    | 0             |
++-------------------+---------------+----------------------+---------------+
+| Medical condition | 0             | 0                    | 0             |
++-------------------+---------------+----------------------+---------------+
+| Physical activity | 0             | 0                    | 0             |
++-------------------+---------------+----------------------+---------------+
+| Sleep             | 0.27          | 0.35                 | 0             |
++-------------------+---------------+----------------------+---------------+
+| Body measurements | 0             | 0                    | 0             |
++-------------------+---------------+----------------------+---------------+
+
+### Plots of lambdas
+
+### MVS default
+
+![](lasso_mvs_default_lambdaplots_1.png)
+
+![](lasso_mvs_default_lambdaplots_2.png)
+
+![](lasso_mvs_default_lambdaplots_3.png)
+
+![](lasso_mvs_default_lambdaplots_4.png)
+
+![](lasso_mvs_default_lambdaplots_5.png)
+
+### MVS residual models
+
+![](lasso_mvs_resid_lambdaplots_1.png)
+
+![](lasso_mvs_resid_lambdaplots_2.png)
+
+![](lasso_mvs_resid_lambdaplots_3.png)
+
+![](lasso_mvs_resid_lambdaplots_4.png)
+
+![](lasso_mvs_resid_lambdaplots_5.png)
+
 ### Plots of coefficient distributions
 
 ```{r, echo=FALSE}
-
-# Load results
-res_mvs_default <- readRDS('res_mvs_default_lasso.rds')
-
-res_mvs_resid <- readRDS('res_mvs_resid_lasso.rds')
 
 
 # Helper function to summarize results
@@ -145,8 +201,13 @@ plot_coefficients <- function(res_list, title, view.names = NULL) {
 
 ```
 
+## Plots for lambda.min
+
 ```{r, echo = F}
+
+res_mvs_default <- readRDS('res_mvs_default_lasso.rds')
 #summarize_results(res_mvs_default)
+
 plot_coefficients(res_mvs_default, title = "MVS Linear: Distribution of MVS coefficients by view", view.names = c("Sociodemographics", "Dietary Behavior", "Medical cond.", "Physical actvitiy","Sleep", "Body measur."))
 ```
 
@@ -154,15 +215,33 @@ plot_coefficients(res_mvs_default, title = "MVS Linear: Distribution of MVS coef
 
 ```{r, echo = F}
 # summarize_results(res_mvs_resid)
+res_mvs_resid <- readRDS('res_mvs_resid_lasso.rds')
+
 plot_coefficients(res_mvs_resid, title = "MVS Residual Models: Distribution of MVS coefficients by view", view.names = c("Sociodemogr. (LM)", "Dietary Beh. (LM)", "Medical cond. (LM)", "Physical act. (LM)","Sleep (LM)", "Body measur. (LM)", "Sociodemogr. (RF)", "Dietary Beh. (RF)", "Medical cond. (RF)", "Physical act. (RF)","Sleep (RF)", "Body measur. (RF)"))
 ```
 
-# 
+## Plots for lambda.1se
+
+```{r, echo = F}
+res_mvs_default <- readRDS('res_mvs_default_lasso_1se.rds')
+#summarize_results(res_mvs_default)
+
+plot_coefficients(res_mvs_default, title = "MVS Linear: Distribution of MVS coefficients by view", view.names = c("Sociodemographics", "Dietary Behavior", "Medical cond.", "Physical actvitiy","Sleep", "Body measur."))
+```
+
+#### 
+
+```{r, echo = F}
+res_mvs_resid <- readRDS('res_mvs_resid_lasso_1se.rds')
+# summarize_results(res_mvs_resid)
+
+plot_coefficients(res_mvs_resid, title = "MVS Residual Models: Distribution of MVS coefficients by view", view.names = c("Sociodemogr. (LM)", "Dietary Beh. (LM)", "Medical cond. (LM)", "Physical act. (LM)","Sleep (LM)", "Body measur. (LM)", "Sociodemogr. (RF)", "Dietary Beh. (RF)", "Medical cond. (RF)", "Physical act. (RF)","Sleep (RF)", "Body measur. (RF)"))
+```
 
 # Variable names and descriptions
 
 ```{r, echo = F}
-table_var_names <- readRDS('/Users/zinobrystowski/Documents/PhD Project/Projects 2 and 3/NHANES data/nhanes_table_var_names.rds')
+table_var_names <- readRDS('nhanes_table_var_names.rds')
 
 table_var_names
 ```
@@ -201,6 +280,29 @@ extract_results <- function(model, y_train = y_train, newx = X_test, newy = y_te
   )
   
 }
+
+
+# Helper function to extract results
+extract_results_lambda1se <- function(model, y_train = y_train, newx = X_test, newy = y_test) {
+  pred <- predict(model, newx = newx, cvlambda = "lambda.1se")
+  test_mse <- mean((pred - newy)^2)
+  test_r2 <- 1 - test_mse / var(newy)
+  coefs <- coef(model, cvlambda = "lambda.1se")$`Level 2`[[1]]
+  cv_variances <- apply(model$`Level 1`$CVs, 2, var)
+  cv_sds <- sqrt(cv_variances)
+  std_coefs <- coefs[-1,] * (cv_sds / sd(y_train))
+  
+  list(
+    model = model,
+    coefficients = coefs,
+    std_coefficients = std_coefs,
+    test_MSE = test_mse,
+    test_R2 = test_r2,
+    cv_variances = cv_variances
+  )
+  
+}
+
 
 # Load data
 new_nhanes_complc <- readRDS('/Users/zinobrystowski/Documents/PhD Project/Projects 2 and 3/NHANES data/nhanes_cc.rds')
@@ -249,26 +351,14 @@ for(i in 1:10) {
     views = view_ids,
     progress = FALSE,
     family = "gaussian",
-    relax.meta = TRUE
+    relax = c(FALSE, TRUE)
   )
   
   # Compute results
-  res_mvs_default[[i]] <- extract_results(mvs_default, y_train = y_train, newx = X_test, newy = y_test)
+  # res_mvs_default[[i]] <- extract_results(mvs_default, y_train = y_train, newx = X_test, newy = y_test)
+  res_mvs_default[[i]] <- extract_results_lambda1se(mvs_default, y_train = y_train, newx = X_test, newy = y_test)
   
-  ## RF MVS (four views and groups, random forest baselearners, lasso metalearner);
-  type <- list(level1 = "RF", meta = "StaPLR")
-  mvs_rf <- MVS(
-    x = X_train,
-    y = y_train,
-    views = view_ids,
-    type = type,
-    progress = FALSE,
-    family = "gaussian",
-    relax.meta = TRUE
-  )
-  
-  # Compute results
-  res_mvs_rf[[i]] <- extract_results(mvs_rf, y_train = y_train, newx = X_test, newy = y_test)
+
   
   # Repeated views MVS
   
@@ -295,20 +385,6 @@ for(i in 1:10) {
     ),
     meta = "StaPLR"
   )
-  
-  # Fit MVS model
-  mvs_rep <- MVS(
-    x = Xrep_train,
-    y = y_train,
-    views = view_ids_rep,
-    type = type,
-    progress = FALSE,
-    family = "gaussian",
-    relax.meta = TRUE
-  )
-  
-  # Compute results
-  res_mvs_repeated[[i]] <- extract_results(mvs_rep, y_train = y_train,  newx = Xrep_test, newy = y_test)
   
   # MVS residual models
   
@@ -340,11 +416,12 @@ for(i in 1:10) {
     progress = FALSE,
     family = "gaussian",
     offsets = list(c(1, 7), c(2, 8), c(3, 9), c(4, 10), c(5, 11), c(6, 12)),
-    relax.meta = TRUE
+    relax = c(FALSE, TRUE)
   )
   
   # Compute results
-  res_mvs_resid[[i]] <- extract_results(mvs_res_mod, y_train = y_train, newx = Xrep_test, newy = y_test)
+  # res_mvs_resid[[i]] <- extract_results(mvs_res_mod, y_train = y_train, newx = Xrep_test, newy = y_test)
+  res_mvs_resid[[i]] <- extract_results_lambda1se(mvs_res_mod, y_train = y_train, newx = Xrep_test, newy = y_test)
   
 }
 
