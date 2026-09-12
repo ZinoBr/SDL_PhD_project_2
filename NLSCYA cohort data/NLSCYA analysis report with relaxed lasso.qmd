@@ -81,8 +81,8 @@ For evaluating predictive performance, 10-fold cross-validation was used. Becaus
 
 |          | MVS Linear | MVS Residual Models |
 |----------|------------|---------------------|
-| MSE (SD) | 537 (57)   | 537 (58)            |
-| Test R²  | 0.12       | 0.12                |
+| MSE (SD) | 542 (60)   | 531 (58)            |
+| Test R²  | 0.11       | 0.12                |
 
 *Note.* The variance of the outcome in the complete data is 605. Predictive R² was calulcated as 1 - mse / var(y_test).
 
@@ -95,9 +95,9 @@ For evaluating predictive performance, 10-fold cross-validation was used. Becaus
 |                  |               | \                    | \             |
 |                  |               | Linear               | Random Forest |
 +==================+===============+======================+===============+
-| Child            | 0             | 0.06                 | 0             |
+| Child            | 0             | 0.06                 | 0.02          |
 +------------------+---------------+----------------------+---------------+
-| Mother           | 0.39          | 0.27                 | 0             |
+| Mother           | 0.39          | 0.25                 | 0             |
 +------------------+---------------+----------------------+---------------+
 | Family           | 0             | 0                    | 0             |
 +------------------+---------------+----------------------+---------------+
@@ -408,15 +408,6 @@ plot_coefficients(res_mvs_resid, title = "MVS Residual Models: Distribution of M
 plot_coefficients(res_mvs_default_lasso_1se, title = "MVS Linear: Distribution of MVS coefficients by view", view.names = c("Child", "Mother", "Family", "Pre- & Postnatal"))
 
 plot_coefficients(res_mvs_resid_lasso_1se, title = "MVS Residual Models: Distribution of MVS coefficients by view", view.names = c("Child (LM)", "Mother (LM)", "Family (LM)", "Pre- & Postnatal (LM)","Child (RF)", "Mother (RF)", "Family (RF)", "Pre- & Postnatal (RF)"))
-
-```
-
-```{r, echo = FALSE}
-# Plot coefficients
-
-res_mvs_resid <- readRDS('res_mvs_resid_lasso_1se.rds')
-
-plot_coefficients(res_mvs_resid, title = "MVS Residual Models: Distribution of MVS coefficients by view", view.names = c("Child (LM)", "Mother (LM)", "Family (LM)", "Pre- & Postnatal (LM)","Child (RF)", "Mother (RF)", "Family (RF)", "Pre- & Postnatal (RF)"))
 
 ```
 
