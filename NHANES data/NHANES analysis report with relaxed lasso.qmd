@@ -6,13 +6,15 @@ editor: visual
 
 ## Objectives
 
-- Can the presence of interactions- and other non-linear effects be inferred by comparing the prediction performance of purely linear base model with random forest base models in MVS?
-
-- Can residualizing the outcome with respect to a linear model help to evaluate non-linear or interaction signal using random forests?
+- Does relaxed lasso in the meta model results in a sparser selection of domains while retaining a reasonably high predictive performance compared to using regular lasso?
 
 ## Summary & Conclusion
 
-- In the empirical example using the NHANES data, random forest base models in the MVS configuration showed **no improvement** in predictive performance compared with MVS using only linear models. Therefore, coefficients are not further interpreted.
+- At lambda.min, the relaxed lasso parameter gamma is largely 1 for both MVS default and MVS residual models configurations. In this setting, no adjustment to coefficient shrinkage is applied, resulting in the same results compared to using the regular lasso.
+- At lambda.1se, the gamma is largely **below** 1 for both configurations, resulting in a sparser set of domains with coefficient shrinkage reduced through the relaxed lasso refitting.
+- Using lambda.1se results in a sparser model but at considerable costs in prediction accuracy. The results show a drop of mean predictive R squared by approximately 0.1, from 0.22 for MVS default and 0.22 for MVS residual models, to 0.10 and 0.11, respectively.\
+- Under lambda.1se, both MVS linear configuration return a sparser model with a single non-zero coefficient for the domain sleep. In the MVS residual models configuration, the non-zero coefficient was selected for the linear base model for sleep, not for the random forest base model. \
+- MVS residual models shows a marginally better prediction performance than MVS default in the lambda.1se setting.
 
 ## Data
 
@@ -189,7 +191,7 @@ extract_results_lambda1se <- function(model, y_train = y_train, newx = X_test, n
 
 
 # Load data
-new_nhanes_complc <- readRDS('/Users/zinobrystowski/Documents/PhD Project/Projects 2 and 3/NHANES data/nhanes_cc.rds')
+new_nhanes_complc <- readRDS('nhanes_cc.rds')
 
 # Set seed
 set.seed(42)
@@ -310,7 +312,7 @@ for(i in 1:10) {
 
 ### Plots of coefficient distributions
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE, }
 
 
 # Helper function to summarize results
@@ -377,7 +379,7 @@ plot_coefficients <- function(res_list, title, view.names = NULL) {
 
 ## Plots for lambda.min
 
-```{r, echo = F}
+```{r, echo = F, warning=FALSE, message=FALSE, }
 
 # Plots
 
@@ -390,7 +392,7 @@ plot_coefficients(res_mvs_resid, title = "MVS Residual Models: Distribution of M
 
 ## Plots for lambda.1se
 
-```{r, echo = F}
+```{r, echo = FALSE, warning=FALSE, message=FALSE, }
 
 # Plots
 
@@ -468,13 +470,13 @@ extract_results_lambda1se <- function(model, y_train = y_train, newx = X_test, n
 
 
 # Load data
-new_nhanes_complc <- readRDS('/Users/zinobrystowski/Documents/PhD Project/Projects 2 and 3/NHANES data/nhanes_cc.rds')
+new_nhanes_complc <- readRDS('nhanes_cc.rds')
 
 # Set seed
 set.seed(42)
 
 # Load helper function to compute results from MVS objects
-#source('/Users/zinobrystowski/Documents/PhD Project/Projects 2 and 3/NHANES data/Helper functions/extract_results.R')
+#source('Helper functions/extract_results.R')
 
 
 # Define view indices based on source and number of dummy variables
