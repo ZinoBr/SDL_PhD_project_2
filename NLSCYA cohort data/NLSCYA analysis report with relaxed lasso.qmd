@@ -14,7 +14,7 @@ editor: visual
 
 - At lambda.1se, the gamma is largely **below** 1 for both configurations, resulting in a sparser set of domains with coefficient shrinkage reduced through the relaxed lasso refitting.
 
-- Using lambda.1se results in a sparser model but at considerable costs in prediction accuracy. The results show a drop of mean predictive R squared by approximately 0.9, from 0.20 for MVS default and 0.21 for MVS residual models, to 0.11 and 0.12, respectively.
+- Using lambda.1se results in a sparser model but at considerable costs in prediction accuracy. The results show a drop of mean predictive R squared by approximately 0.09, from 0.20 for MVS default and 0.21 for MVS residual models, to 0.11 and 0.12, respectively.
 
 - Under lambda.1se, the sparser model for the MVS linear configuration returns a non-zero for one domain, namely mother characteristics. In the MVS residual model configuration, three domains are selected for the linear base model, and one for the random forest base model fitted on the residualized outcome.
 
