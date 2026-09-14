@@ -6,19 +6,19 @@ editor: visual
 
 ## Objectives
 
-- Can the presence of interactions- and other non-linear effects be inferred by comparing the prediction performance of purely linear base model with random forest base models in MVS?\
-
-- Can residualizing the outcome with respect to a linear model help to evaluate non-linear or interaction signal using random forests?
-
-## 
+- Does relaxed lasso in the meta model results in a sparser selection of domains while retaining a reasonably high predictive performance compared to using regular lasso?
 
 ## Summary & Conclusions
 
-- Using random forest base models in the MVS configuration showed slight improvement in predictive performance compared with MVS using only linear models.
+- At lambda.min, the relaxed lasso parameter gamma is largely 1 for both MVS default and MVS residual models configurations. In this setting, no adjustment to coefficient shrinkage is applied, resulting in the same results compared to using the regular lasso.
 
-- In the MVS configuration where additional random forest base learners were fitted to the residualized outcome after subtracting the linear predictions, the estimated coefficients suggest that the random forest models capture additional signal beyond the linear predictions.
+- At lambda.1se, the gamma is largely **below** 1 for both configurations, resulting in a sparser set of domains with coefficient shrinkage reduced through the relaxed lasso refitting.
 
-- Conclusion: Modest predictive improvements, but the coefficients of the MVS configurations with random forest base models indicate the presence of signal not captured by purely linear base models.
+- Using lambda.1se results in a sparser model but at considerable costs in prediction accuracy. The results show a drop of mean predictive R squared by approximately 0.9, from 0.20 for MVS default and 0.21 for MVS residual models, to 0.11 and 0.12, respectively.
+
+- Under lambda.1se, the sparser model for the MVS linear configuration returns a non-zero for one domain, namely mother characteristics. In the MVS residual model configuration, three domains are selected for the linear base model, and one for the random forest base model fitted on the residualized outcome.
+
+- MVS residual models shows a slightly better prediction performance than MVS default for both lambda.min and lambda.1se settings, but the difference is small.
 
 ## Data
 
